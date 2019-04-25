@@ -4,7 +4,11 @@
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Signature.png" />
     <None Remove="Verdana.ttf" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Signature.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Verdana.ttf" />
