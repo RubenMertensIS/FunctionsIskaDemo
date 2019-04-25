@@ -20,8 +20,8 @@ namespace ISKAFunctionsEmpty
     [StorageAccount("storageaccount")]
     public static class DurableFunctions
     {
-        [FunctionName(nameof(Http_StartSigning))]
-        public static async Task<HttpResponseMessage> Http_StartSigning(
+        [FunctionName(nameof(Http_StartSigningDurable))]
+        public static async Task<HttpResponseMessage> Http_StartSigningDurable(
             [HttpTrigger] HttpRequestMessage request,
             [OrchestrationClient] DurableOrchestrationClient client,
             ILogger log
