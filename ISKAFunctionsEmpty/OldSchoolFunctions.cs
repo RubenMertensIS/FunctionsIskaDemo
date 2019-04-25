@@ -55,10 +55,10 @@ namespace ISKAFunctionsEmpty
             )
         {
             message = new SendGridMessage();
-            message.From = new EmailAddress("toon.jansens@infosupport.com");
+            message.From = new EmailAddress("someemail@company.com");
             message.Subject = "You've got mail";
             message.PlainTextContent = "In Bijlage de maandstaat";
-            message.AddTo("ruben.mertens@infosupport.com");
+            message.AddTo("someemail@company.com");
             using(var save =new MemoryStream())
             {
                 signedStream.CopyTo(save);
