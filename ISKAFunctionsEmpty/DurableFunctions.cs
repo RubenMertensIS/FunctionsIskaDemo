@@ -18,24 +18,38 @@ namespace ISKAFunctionsEmpty
     //tekenen
     //doorsturen mail 
     [StorageAccount("storageaccount")]
-    public static class OldSchoolFunctions
+    public static class DurableFunctions
     {
         [FunctionName(nameof(Http_StartSigning))]
-        [return: Queue("maandstaten-ready", Connection = "storageaccount")]
-        public static string Http_StartSigning(
+        public static async Task<HttpResponseMessage> Http_StartSigning(
             [HttpTrigger] HttpRequestMessage request,
+            [OrchestrationClient] DurableOrchestrationClient client,
             ILogger log
             )
         {
             var name = "Ruben_Mertens_April.pdf";
-            return name;
+            var instanceId = await client.StartNewAsync(nameof(OrchestratorSigner), name);
+            return client.CreateCheckStatusResponse(request, instanceId);
+        }
+
+        [FunctionName(nameof(OrchestratorSigner))]
+        public static async Task OrchestratorSigner(
+            [OrchestrationTrigger] DurableOrchestrationContext context,
+            ILogger log
+            )
+        {
+            var fileName = context.GetInput<string>();
+            await context.CallActivityAsync(nameof(QueueTriggerSignAsync), fileName);
+            context.SetCustomStatus("Dit is een custom statuus");
+            await context.WaitForExternalEvent<bool>("goedkeuren");
+            await context.CallActivityAsync(nameof(SendMail), fileName);
         }
 
         [FunctionName(nameof(QueueTriggerSignAsync))]
         public static async Task QueueTriggerSignAsync(
-            [QueueTrigger("maandstaten-ready")] string message,
-            [Blob("maandstaten/unsigned/{queueTrigger}", FileAccess.Read)] Stream unsignedStream,
-            [Blob("maandstaten/signed/{queueTrigger}", FileAccess.Write)] Stream signedStream,
+            [ActivityTrigger] string message,
+            [Blob("maandstaten/unsigned/{message}", FileAccess.Read)] Stream unsignedStream,
+            [Blob("maandstaten/signed/{message}", FileAccess.Write)] Stream signedStream,
             [Blob("signatures/Ruben_Mertens_Signature.png", FileAccess.Read)] Stream signatureStream,
             ILogger log
             )
@@ -48,8 +62,8 @@ namespace ISKAFunctionsEmpty
 
         [FunctionName(nameof(SendMail))]
         public static void SendMail(
-            [BlobTrigger("maandstaten/signed/{name}")] Stream signedStream,
-            string name,
+            [ActivityTrigger] string name,
+            [Blob("maandstaten/signed/{name}",FileAccess.Read)] Stream signedStream,
             [SendGrid(ApiKey = "sendgridapikey")] out SendGridMessage message,
             ILogger log
             )
